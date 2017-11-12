@@ -10,37 +10,74 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <curl/curl.h>
 # include "NetworkModule.hpp"
-# include <iostream>
+#include <sstream>
+
+#include <net/route.h>
+#include <net/if.h>
+#include <sys/sysctl.h>
 
 NetworkModule::NetworkModule( std::string const & moduleName ) : IMonitorModule(),
 	_moduleName(moduleName), _moduleData()
 {
-	_moduleData.resize(1);
+	_moduleData.resize(2);
 }
 
 NetworkModule::~NetworkModule( void ) {}
 
 void                                NetworkModule::updateData( void )
 {
-	FILE		*info;
-	char		buf[256];
-	int			i = 0;
+	int         mib[6];
+    char         *lim;
+    char         *next;
+    size_t         len;
+    struct         if_msghdr *ifm;
 
-	// info = popen("/usr/bin/top -l1 | /usr/bin/head -n10 | /usr/bin/grep 'Networks' | /usr/bin/tr ' ,:' '\n' | sed -n '/[0-9]/p' | /usr/bin/tr '/' '\n'", "r");
-	info = popen("/usr/bin/top -l1 | /usr/bin/head -n10 | /usr/bin/grep 'Networks' | /usr/bin/tr ' ,:' '\n' | sed -n '/[0-9]/p' | /usr/bin/tr '\n' ' '", "r");
-	if (info == NULL)
-    {
-		_moduleData[0] = "Error get data";
-		return ;
+    long int     ipackets = 0;
+    long int     opackets = 0;
+    long int     ibytes = 0;
+    long int     obytes = 0;
+
+    mib[0]= CTL_NET;// networking subsystem
+    mib[1]= PF_ROUTE;// type of information
+    mib[2]= 0;// protocol (IPPROTO_xxx)
+    mib[3]= 0;// address family
+    mib[4]= NET_RT_IFLIST2;// operation
+    mib[5]= 0;
+
+    sysctl(mib, 6, NULL, &len, NULL, 0);
+    char buf[len];
+    sysctl(mib, 6, buf, &len, NULL, 0);
+
+    lim = buf + len;
+    for (next = buf; next < lim; ) {
+        ifm = (struct if_msghdr *)next;
+        next += ifm->ifm_msglen;
+
+        if (ifm->ifm_type == RTM_IFINFO2) {
+            struct if_msghdr2 *if2m = (struct if_msghdr2 *)ifm;
+
+            if(if2m->ifm_data.ifi_type!=18) {
+                opackets += if2m->ifm_data.ifi_opackets;
+                ipackets += if2m->ifm_data.ifi_ipackets;
+                obytes   += if2m->ifm_data.ifi_obytes;
+                ibytes   += if2m->ifm_data.ifi_ibytes;
+            }
+        }
 	}
-    while (fgets(buf, 256, info) != NULL)
-    {
-		_moduleData[i] = strdup(buf);
-		++i;
-	}
-	pclose(info);
+	
+	std::stringstream ss;
+	ss << "packets in: " << ipackets;
+	ss << " / packets out: " << opackets;
+	_moduleData[0] = ss.str();
+	
+	ss.str(std::string());
+	ss.precision(2);
+    ss.setf(std::ios::fixed);
+	ss << "data resived: " << static_cast<double>(ibytes) / 1024 / 1024 / 1024;
+	ss << " GB / data sent: " << static_cast<double>(obytes) / 1024 / 1024 / 1024;
+	ss << " GB";
+    _moduleData[1] = ss.str();
 }
 
 std::vector<std::string> const &    NetworkModule::getModulData( void ) const
