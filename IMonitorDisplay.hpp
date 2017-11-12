@@ -11,3 +11,28 @@
 /* ************************************************************************** */
 
 
+#ifndef I_MONITOR_DISPLAY_HPP
+# define I_MONITOR_DISPLAY_HPP
+
+# include <iostream>
+# include <vector>
+
+
+class   IMonitorDisplay {
+
+private:
+    
+    IMonitorDisplay( IMonitorDisplay const & );
+    IMonitorDisplay & operator=( IMonitorDisplay const & );
+
+public:
+
+    IMonitorDisplay( void ) { };
+    virtual         ~IMonitorDisplay( void ) { };
+
+    virtual void    init( void ) = 0;
+    virtual void    run( void ) = 0;
+
+};
+
+#endif

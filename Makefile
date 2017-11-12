@@ -1,43 +1,53 @@
-# **************************************************************************** #
+#******************************************************************************#
 #                                                                              #
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: atverdok <marvin@42.fr>                    +#+  +:+       +#+         #
+#    By: skavunen <marvin@42.fr>                    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2017/11/05 21:08:04 by atverdok          #+#    #+#              #
-#    Updated: 2017/11/05 21:08:08 by atverdok         ###   ########.fr        #
+#    Created: 2017/11/01 17:32:33 by skavunen          #+#    #+#              #
+#    Updated: 2017/11/12 21:12:37 by skavunen         ###   ########.fr        #
 #                                                                              #
-# **************************************************************************** #
+#******************************************************************************#
 
-NAME = ft_retro
+NAME = ft_gkrellm
 
-CC = clang++
+SRCS =	main.cpp \
+		CpuModule.cpp \
+		CursDisplay.cpp \
+		DateModule.cpp \
+		GraficDisplay.cpp \
+		HostUserModule.cpp \
+		MemoryModule.cpp \
+		NetworkModule.cpp \
+		OsInfoModule.cpp \
 
-SRC = src
-
-OBJ = obj
-
-CFLAGS = -Wall -Wextra -Werror -I./includes
-
-NCURSES = -lncurses
-
-SRCS =	  main.cpp
+CPP = clang++
+CC_FLAGS = -Wall -Werror -Wextra
 
 OBJ = $(SRCS:.cpp=.o)
+
+NOC=\033[0m
+OKC=\033[32;05m
+ERC=\033[31m
+WAC=\033[33m
 
 all: $(NAME)
 
 $(NAME): $(OBJ)
-	$(CC) $(OBJ) -o $(NAME) $(NCURSES)
+	@echo "$(OKC)$(NAME): Compiling objectives $(NAME)$(NOC)"
+	@$(CPP) $(CC_FLAGS) -o $(NAME) $(OBJ) -I ~/.brew/include -L ~/.brew/lib -lsfml-system -lsfml-window -lsfml-graphics -lsfml-network -lsfml-audio -rpath ~/.brew/lib -lncurses
+	@echo "$(OKC)$(NAME): Compilation success!$(NOC)"
 
-%.o: $(SRC)/%.cpp
-	$(CC) $(CFLAGS) -o $@ -c $<
+%.o: %.cpp
+	@$(CPP) $(CC_FLAGS) -I ~/.brew/include -o $@  -c $^
 
 clean:
-	rm -f $(OBJ)
+	@rm -rf $(OBJ)
+	@echo "$(WAC)$(NAME): Removing $(NAME) objectives$(NOC)"
 
 fclean: clean
-	rm -f $(NAME)
+	@rm -f $(NAME)
+	@echo "$(WAC)$(NAME): Removing executable$(NOC)"
 
-re: clean all
+re: fclean all

@@ -22,6 +22,12 @@ class   CpuModule : public IMonitorModule {
 private:
     std::string const           _moduleName;
     std::vector<std::string>    _moduleData; 
+    unsigned long long _1previousTotalTicks;
+    unsigned long long _1previousIdleTicks;
+
+    float CalculateCPULoad(unsigned long long idleTicks, unsigned long long totalTicks);
+    float GetCPULoad();
+    
 
     CpuModule( void );
     CpuModule( CpuModule const & );

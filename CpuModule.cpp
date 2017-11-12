@@ -24,31 +24,33 @@
 
 #include <math.h>
 
-static unsigned long long _previousTotalTicks = 0;
-static unsigned long long _previousIdleTicks = 0;
+#include <sys/ioctl.h>
+#include <unistd.h>
 
-CpuModule::CpuModule( std::string const & moduleName ) : IMonitorModule(),
-	_moduleName(moduleName), _moduleData()
+
+
+CpuModule::CpuModule( std::string const & moduleName ) : IMonitorModule(), 
+	_moduleName(moduleName), _moduleData(), _1previousTotalTicks(0),  _1previousIdleTicks(0)
 {
 	_moduleData.resize(3);
 }
 
 CpuModule::~CpuModule( void ) {}
 
-float CalculateCPULoad(unsigned long long idleTicks, unsigned long long totalTicks)
+float CpuModule::CalculateCPULoad(unsigned long long idleTicks, unsigned long long totalTicks)
 {
-  unsigned long long totalTicksSinceLastTime = totalTicks-_previousTotalTicks;
-  unsigned long long idleTicksSinceLastTime  = idleTicks-_previousIdleTicks;
+  unsigned long long totalTicksSinceLastTime = totalTicks-_1previousTotalTicks;
+  unsigned long long idleTicksSinceLastTime  = idleTicks-_1previousIdleTicks;
   float ret = 1.0f-((totalTicksSinceLastTime > 0) ? ((float)idleTicksSinceLastTime)/totalTicksSinceLastTime : 0);
-  _previousTotalTicks = totalTicks;
-  _previousIdleTicks  = idleTicks;
+  _1previousTotalTicks = totalTicks;
+  _1previousIdleTicks  = idleTicks;
   return ret;
 }
 
 // Returns 1.0f for "CPU fully pinned", 0.0f for "CPU idle", or somewhere in between
 // You'll need to call this at regular intervals, since it measures the load between
 // the previous call and the current one.
-float GetCPULoad()
+float CpuModule::GetCPULoad()
 {
    host_cpu_load_info_data_t cpuinfo;
    mach_msg_type_number_t count = HOST_CPU_LOAD_INFO_COUNT;
@@ -76,15 +78,26 @@ void                                CpuModule::updateData( void )
     float cpuLoad = GetCPULoad() * 100.0f;
 
     ss.str(std::string());
+    ss.precision(2);
+    ss.setf(std::ios::fixed);
     ss << cpuLoad;
     _moduleData[1] = ss.str();
     ss.str(std::string());
     ss << "[ ";
-    for (int i = 0; i < static_cast< int >(round(cpuLoad)); ++i)
+
+    struct winsize size;
+    ioctl(STDOUT_FILENO,TIOCGWINSZ,&size);
+    int max  = size.ws_col - 15;
+    int ret = static_cast< int >(round(cpuLoad));
+
+    int ret1 = ret * max / 100;
+
+
+    for (int i = 0; i < ret1; ++i)
     {
-        ss << "\e[1;91m|\e[0m";
+        ss << "|";
     }
-    for (int i = static_cast< int >(round(cpuLoad)); i < 100; ++i)
+    for (int i = ret1; i < max; ++i)
     {
         ss << " ";
     }

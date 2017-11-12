@@ -15,6 +15,8 @@
 #include <mach/mach.h>
 #include <sys/sysctl.h> 
 #include <math.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
 
 MemoryModule::MemoryModule( std::string const & moduleName ) : IMonitorModule(),
 	_moduleName(moduleName), _moduleData()
@@ -27,9 +29,8 @@ MemoryModule::~MemoryModule( void ) {}
 void                                MemoryModule::updateData( void )
 {
     u_int64_t total_mem;
-    float used_mem;
-    float percentage_mem;
-    float free_mem;
+    float used_mem = 0.0;
+ 
   
     vm_size_t page_size;
     vm_statistics_data_t vm_stats;
@@ -56,11 +57,19 @@ void                                MemoryModule::updateData( void )
 
     ss.str(std::string());
     ss << "[ ";
-    for (int i = 0; i < static_cast< int >(round(us)); ++i)
+
+    struct winsize size;
+    ioctl(STDOUT_FILENO,TIOCGWINSZ,&size);
+    int max  = size.ws_col - 15;
+    int ret = static_cast< int >(round(us));
+
+    int ret1 = ret * max / 100;
+
+    for (int i = 0; i < ret1; ++i)
     {
-        ss << "\e[1;34m|\e[0m";
+        ss << "|";
     }
-    for (int i = static_cast< int >(round(us)); i < 100; ++i)
+    for (int i = ret1; i < max; ++i)
     {
         ss << " ";
     }

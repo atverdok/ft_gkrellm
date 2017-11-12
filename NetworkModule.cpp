@@ -10,8 +10,9 @@
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <curl/curl.h>
 # include "NetworkModule.hpp"
-#include <sstream>
+# include <sstream>
 
 #include <net/route.h>
 #include <net/if.h>

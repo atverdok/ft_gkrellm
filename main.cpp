@@ -1,5 +1,5 @@
 /* ************************************************************************** */
-/*                                                                            */
+/*                                                                              */
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
@@ -18,67 +18,39 @@
 #include "MemoryModule.hpp"
 #include "CpuModule.hpp"
 #include "OsInfoModule.hpp"
-
-
 #include <unistd.h>
+#include <ncurses.h>
+#include <sys/ioctl.h>
 
-void printVector( std::vector<std::string> const & vec)
+#include "CursDisplay.hpp"
+#include "GraficDisplay.hpp"
+
+
+void        run_graphic( void );
+void        run_shell( void );
+
+
+
+int main( int ac, char **av )
 {
-    for(int i=0; i<vec.size(); ++i)
+    if (ac == 2 && !strcmp(av[1],"-t"))
     {
-        if (!(vec[i].empty()))
-            std::cout << vec[i] << std::endl;
+        // g_flag = 0;
+        // run_shell();
+        CursDisplay curs;
+        curs.init();
+        curs.run();
     }
-}
-
-int main( void )
-{
-    HostUserModule host("Hostname/username module");
-    host.updateData();
-    std::cout << host.getModulName() << std::endl;
-    printVector(host.getModulData());
-    std::cout << std::endl;
-
-    OsInfoModule os("OS info module");
-    os.updateData();
-    std::cout << os.getModulName() << std::endl;
-    printVector(os.getModulData());
-    std::cout << std::endl;
-
-    DateModule date("Date/time module");
-    date.updateData();
-    std::cout << date.getModulName() << std::endl;
-    printVector(date.getModulData());
-    std::cout << std::endl;
-
+    else if (ac == 2 && !strcmp(av[1], "-g"))
+    {
+        // g_flag = 1;
+        // run_graphic();
+        GraficDisplay grafic;
+        grafic.init();
+        grafic.run();
+    }
+    else
+        std::cout << "usage ./ft_gkrellm  < -t > || < -g >." << std::endl;
     
-    CpuModule cpu("CPU module");
-    std::cout << cpu.getModulName() << std::endl;
-
-    cpu.updateData();
-    printVector(cpu.getModulData());
-    std::cout << std::endl;
-
-    // while (true)
-    // {
-    //     cpu.updateData();
-    //     printVector(cpu.getModulData());
-    //     std::cout << std::endl;
-    //     usleep(50000);
-    // }
-
-
-    MemoryModule mem("RAM module");
-    mem.updateData();
-    std::cout << mem.getModulName() << std::endl;
-    printVector(mem.getModulData());
-    std::cout << std::endl;
-
-    NetworkModule net("Network throughput module");
-    net.updateData();
-    std::cout << net.getModulName() << std::endl;
-    printVector(net.getModulData());
-    std::cout << std::endl;
-
-    return 0;
+        return 0;
 }
