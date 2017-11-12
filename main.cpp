@@ -17,6 +17,10 @@
 #include "HostUserModule.hpp"
 #include "MemoryModule.hpp"
 #include "CpuModule.hpp"
+#include "OsInfoModule.hpp"
+
+
+#include <unistd.h>
 
 void printVector( std::vector<std::string> const & vec)
 {
@@ -29,23 +33,40 @@ void printVector( std::vector<std::string> const & vec)
 
 int main( void )
 {
-    DateModule date("Date/time module");
-    date.updateData();
-    std::cout << date.getModulName() << std::endl;
-    printVector(date.getModulData());
-    std::cout << std::endl;
-
     HostUserModule host("Hostname/username module");
     host.updateData();
     std::cout << host.getModulName() << std::endl;
     printVector(host.getModulData());
     std::cout << std::endl;
 
+    OsInfoModule os("OS info module");
+    os.updateData();
+    std::cout << os.getModulName() << std::endl;
+    printVector(os.getModulData());
+    std::cout << std::endl;
+
+    DateModule date("Date/time module");
+    date.updateData();
+    std::cout << date.getModulName() << std::endl;
+    printVector(date.getModulData());
+    std::cout << std::endl;
+
+    
     CpuModule cpu("CPU module");
-    cpu.updateData();
     std::cout << cpu.getModulName() << std::endl;
+
+    cpu.updateData();
     printVector(cpu.getModulData());
     std::cout << std::endl;
+
+    // while (true)
+    // {
+    //     cpu.updateData();
+    //     printVector(cpu.getModulData());
+    //     std::cout << std::endl;
+    //     usleep(50000);
+    // }
+
 
     MemoryModule mem("RAM module");
     mem.updateData();

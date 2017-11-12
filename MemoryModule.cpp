@@ -14,11 +14,12 @@
 #include <sstream>
 #include <mach/mach.h>
 #include <sys/sysctl.h> 
+#include <math.h>
 
 MemoryModule::MemoryModule( std::string const & moduleName ) : IMonitorModule(),
 	_moduleName(moduleName), _moduleData()
 {
-	_moduleData.resize(1);
+	_moduleData.resize(2);
 }
 
 MemoryModule::~MemoryModule( void ) {}
@@ -29,8 +30,6 @@ void                                MemoryModule::updateData( void )
     float used_mem;
     float percentage_mem;
     float free_mem;
-    float free_mem_in_gigabytes; // used to check if free mem < 1 GB
-    //u_int64_t unused_mem;
   
     vm_size_t page_size;
     vm_statistics_data_t vm_stats;
@@ -46,15 +45,27 @@ void                                MemoryModule::updateData( void )
         KERN_SUCCESS == host_statistics( mach_port, HOST_VM_INFO,
           ( host_info_t )&vm_stats, &count )
       )
-    {
-      //unused_mem = static_cast<u_int64_t>( vm_stats.free_count * page_size );
-  
-      used_mem = static_cast<float>(
-          ( vm_stats.active_count + vm_stats.wire_count ) * page_size);
+    {  
+      used_mem = static_cast<float>(( vm_stats.active_count + vm_stats.wire_count ) * page_size);
     }
+
+    float us = static_cast< float >(used_mem) / static_cast<float>(total_mem) * 100.0f;
     std::stringstream ss;
-    ss << static_cast< float >(used_mem / 1024 / 1024) << "/" << static_cast< float >(total_mem / 1024 / 1024);
+    ss << static_cast< int >(used_mem / 1024 / 1024) << "/" << static_cast< int >(total_mem / 1024 / 1024);
     _moduleData[0] = ss.str();
+
+    ss.str(std::string());
+    ss << "[ ";
+    for (int i = 0; i < static_cast< int >(round(us)); ++i)
+    {
+        ss << "\e[1;34m|\e[0m";
+    }
+    for (int i = static_cast< int >(round(us)); i < 100; ++i)
+    {
+        ss << " ";
+    }
+    ss << " ]";
+    _moduleData[1] = ss.str();
 
 }
 
